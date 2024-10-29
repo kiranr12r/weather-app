@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<title>Weather App</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 100vh;
+			margin: 0;
+			background-color: #f0f0f0;
+		}
+		.container {
+			text-align: center;
+			padding: 20px;
+			border-radius: 10px;
+			box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+			background-color: #fff;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<h1>Weather App</h1>
+		<p>Enter a city name to get the Weather:</p>
+		<input type="text" id="cityInput" placeholder="Enter the city name">
+		<button onclick="getWeather()">Get Weather</button>
+		<div id="weatherInfo"></div>
+	</div>
+
+	<script>
+		async function getWeather() {
+			const city = document.getElementById("cityInput").value;
+			const weatherInfo = document.getElementById("weatherInfo");
+
+			try {
+				// Get city coordinates using OpenStreetMap's Nominatim API
+				const geoResponse = await fetch(`https://nominatim.openstreetmap.org/search?q=${city}&format=json`);
+				const geoData = await geoResponse.json();
+
+				if (geoData.length === 0) {
+					weatherInfo.innerHTML = "<p>City not found. Please enter a valid city name.</p>";
+					return;
+				}
+
+				const { lat, lon } = geoData[0];
+				// Fetch weather data from Open-Meteo API
+				const weatherResponse = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`);
+				const weatherData = await weatherResponse.json();
+
+				const { temperature, weathercode, windspeed } = weatherData.current_weather;
+
+				// Display weather info
+				weatherInfo.innerHTML = `
+					<h2>${city.charAt(0).toUpperCase() + city.slice(1)}</h2>
+					<p>Weather Code: ${weathercode}</p>
+					<p>Temperature: ${temperature}°C</p>
+					<p>Wind Speed: ${windspeed} km/h</p>
+				`;
+			} catch (error) {
+				console.log("Error fetching weather data:", error);
+				weatherInfo.innerHTML = "<p>Failed to fetch the weather data. Please try again later.</p>";
+			}
+		}
+	</script>
+</body>
+</html>
